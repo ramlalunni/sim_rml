@@ -28,15 +28,20 @@ class ModelSourceMaker:
         - gaussian(fwhm_arcsec, amplitude=1.0): Generates a Gaussian model.
         - elliptical_disk(major_arcsec, minor_arcsec, angle_deg, intensity=1.0): Generates an elliptical disk model.
         - hollow_ring(inner_radius_arcsec, outer_radius_arcsec, intensity=1.0): Generates a hollow ring model.
-        - concentric_rings(radii_arcsec, width_arcsec, intensity=1.0): Generates concentric rings model.
+        - concentric_rings(radii_arcsec, widths_arcsec, intensities=1.0): Generates concentric rings model.
+        - elliptical_gaussian(major_fwhm_arcsec, minor_fwhm_arcsec, angle_deg, amplitude=1.0): Generates an elliptical Gaussian model.
+        - spiral_arms(arm_width_arcsec, pitch_angle_deg, number_of_turns=2, intensity=1.0): Generates a spiral arms model.
+        - point_sources(source_list): Generates an image with point sources defined by RA/Dec offsets and intensities.
         - plot_image(image, model_name="Model", cmap="hot", save_pdf=True): Plots the image and saves it as a PDF.
         - save_fits(image, filename, bunit="Jy/pixel", object_name="Model Source"): Saves the image in FITS format.
+        - generate_and_save(model_name, image, cmap="hot", bunit="Jy/pixel", save_fits=True, save_pdf=True): Helper function to save the model image and plot it.
 
     Example usage:
         >>> maker = ModelSourceMaker(fov_arcsec=2, npix=256, ra_dec_center="12h30m00.0s -30d00m00.0s")
         >>> disk_image = maker.flat_disk(radius_arcsec=0.5, intensity=10.0)
         >>> maker.plot_image(disk_image, model_name="Flat Disk Model")
         >>> maker.save_fits(disk_image, filename="flat_disk_model.fits", object_name="Flat Disk Source")
+        >>> maker.generate_and_save("flat_disk", disk_image)
     """
 
     ###~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~###
