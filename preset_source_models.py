@@ -6,6 +6,7 @@ from astropy.wcs import WCS
 from astropy.coordinates import SkyCoord
 import astropy.units as u
 from typing import Union, List, Tuple
+import os
 
 class ModelSourceMaker:
     """
@@ -457,8 +458,11 @@ class ModelSourceMaker:
         plt.tight_layout()
 
         if save_pdf:
-            plt.savefig(f"{model_name}.pdf", bbox_inches="tight")
+            if not os.path.exists("source_model"):
+                os.makedirs("source_model")
+            plt.savefig(f"source_model/{model_name}.pdf", bbox_inches="tight")
             plt.close()
+            print("Image of source model saved as PDF to:", f"source_model/{model_name}.pdf")
         else:
             plt.show()
     ###~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~###
@@ -505,6 +509,8 @@ class ModelSourceMaker:
         hdu.header['BUNIT'] = bunit
         hdu.header['OBJECT'] = object_name
         hdu.writeto(filename, overwrite=True)
+
+        print("Source model FITS file saved to:", filename)
     ###~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~###
 
     ###~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~###
@@ -526,6 +532,8 @@ class ModelSourceMaker:
         """
 
         if save_fits:
-            self.save_fits(image=image, filename=f"{model_name}.fits", bunit=bunit, object_name=model_name)
+            if not os.path.exists("source_model"):
+                os.makedirs("source_model")
+            self.save_fits(image=image, filename=f"source_model/{model_name}.fits", bunit=bunit, object_name=model_name)
         self.plot_image(image=image, model_name=model_name, cmap=cmap, bunit=bunit, save_pdf=save_pdf)
     ###~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~###
