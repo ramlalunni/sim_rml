@@ -1,0 +1,70 @@
+# inputs.yaml
+
+### Choose modules to run
+###~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~###
+modules:
+  generate_preset_source_model: True # Generate a source model using preset functions
+  use_user_defined_FITS_source_model: False # Use a user-defined FITS file as the source model
+  run_simalma_simulation: True # Run the ALMA simulation with the source model and parameters
+  extract_data_from_MS: True # Extract data from the generated Measurement Set (MS)
+  run_RML_imaging: False # Run RML imaging on the extracted data
+###~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~###
+
+
+### Preset source model parameters
+###~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~###
+preset_model:
+  fov_arcsec: 0.1 # Field of view in arcseconds
+  npix: 128 # Number of pixels in the model
+  ra_dec_center: "23h59m59.96s -34d59m59.50s" # Center coordinates of the model in RA/DEC (hms/dms)
+  preset_function_name: "flat_disk" # The preset source model function to use
+  model_name: "flat_disk" # Name of the generated model
+  radius_arcsec: 0.03 # Radius of the flat disk in arcseconds
+  intensity: 2.5 # Intensity of the flat disk in Jy/pixel
+###~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~###
+
+
+### User-defined source model (FITS file) details
+###~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~###
+user_model:
+  input_user_generated_fits_model: True # Use a user-defined FITS file as the source model
+  source_model_file: "path/to/user_generated_model.fits" # Path to the user-generated FITS model file
+###~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~###
+
+
+### ALMA simulation parameters
+###~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~###
+simalma:
+  project: "flat_disk"
+  overwrite: True
+  skymodel: "flat_disk.fits"
+  indirection: "J2000 23h59m59.96s -34d59m59.50s"
+  incell: "0.1arcsec"
+  inbright: "0.004"
+  incenter: "330.076GHz"
+  inwidth: "50MHz"
+  antennalist: ["alma.cycle5.3.cfg"]
+  totaltime: "1800s"
+  mapsize: " "
+  tpnant: 0
+  tptime: "0s"
+  pwv: 0.6
+  dryrun: False
+  image: False
+###~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~###
+
+
+### Parameters for extracting data from the Measurement Set (MS)
+###~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~###
+extract_MS_data:
+  npz_file: "flat_disk.npz" # Output file for the extracted data
+  make_visibility_plots: True # Whether to create visibility plots
+###~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~###
+
+
+### Parameters for RML imaging
+###~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~###
+# rml_imaging:
+###~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~###
+
+
