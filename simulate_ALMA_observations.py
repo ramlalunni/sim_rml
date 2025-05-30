@@ -8,6 +8,7 @@ import casatasks as cta
 from pathlib import Path
 from typing import Union, List
 from numpy.typing import NDArray
+import os
 
 ###~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~###
 def run_simalma(project:str='sim',
@@ -573,6 +574,7 @@ def run_simalma(project:str='sim',
     for key, value in params.items():
         if value not in [False, None, "", [],[""]]:
             print(f"{key}: {value}")
+    print("\n")
 
     cta.simalma(
         project=project,
@@ -609,13 +611,14 @@ def run_simalma(project:str='sim',
 ###~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~###
 
 ###~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~###
-def extract_MS_data(ms_path:str, npz_file:str, make_visibility_plots:bool=True):
+def extract_MS_data(ms_path:str, rml_data_path:str, npz_file_name:str, make_visibility_plots:bool=True):
     """
     Extracts data from the simulated ALMA Measurement Set (MS) and returns it as a .npz file, for use in MPol RML imaging.
 
     Parameters:
         - ms_path (str): Path to the simulated ALMA Measurement Set (MS) file.
         - npz_file (str): Path where the extracted data will be saved as a .npz file.
+        - rml_data_path (str): Path to the folder where the extracted data will be saved.
         - make_visibility_plots (bool): If True, generates visibility plots from the extracted data.
 
     Raises:
@@ -653,6 +656,7 @@ def extract_MS_data(ms_path:str, npz_file:str, make_visibility_plots:bool=True):
     n_corr = [spw_info[str(i)]['NumCorr'] for i in range(len(spw_info))]
     print("Corrs./Pols. per SPW:", n_corr, '\n')
 
+    print(f"Extracting data from {ms_path}...")
     ms_data = ms.getdata(['u', 'v', 'data', 'amplitude', 'phase', 'real', 'imaginary', 'uvdist', 'weight', 'sigma', 'data_desc_id'])
     u = ms_data['u']
     v = ms_data['v']
@@ -674,20 +678,21 @@ def extract_MS_data(ms_path:str, npz_file:str, make_visibility_plots:bool=True):
     weight = weight.mean(axis=0)
     sigma = sigma.mean(axis=0)
 
-    print("Data shape:", data.shape)
+    print(f"{data.shape} visibilities extracted from the MS")
 
     ms.close()
 
     if make_visibility_plots:
-        plot_visibilities(u=u, v=v, uvdist=uvdist, amp=amp, phase=phase, real=real, imag=imag)
+        plot_visibilities(u=u, v=v, uvdist=uvdist, amp=amp, phase=phase, real=real, imag=imag, pdf_path=rml_data_path)
 
-    np.savez(npz_file, u=u, v=v, data=data, weight=weight)
+    np.savez(f"{rml_data_path}/{npz_file_name}", u=u, v=v, data=data, weight=weight)
+    print(f"Visibility data saved to {rml_data_path}/{npz_file_name}\n")
 
     return n_chan, n_corr, u, v, data, amp, phase, real, imag, uvdist, weight, sigma, data_desc_id
 ###~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~###
 
 ###~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~###
-def plot_visibilities(u:NDArray[float], v:NDArray[float], uvdist:NDArray[float], amp:NDArray[float], phase:NDArray[float], real:NDArray[float], imag:NDArray[float]):
+def plot_visibilities(u:NDArray[float], v:NDArray[float], uvdist:NDArray[float], amp:NDArray[float], phase:NDArray[float], real:NDArray[float], imag:NDArray[float], pdf_path:str):
     """
     Plots the visibility data extracted from the ALMA Measurement Set. The plots are saved as PDF files.
 
@@ -699,6 +704,7 @@ def plot_visibilities(u:NDArray[float], v:NDArray[float], uvdist:NDArray[float],
         phase (NDArray[float]): Phase of the visibility data.
         real (NDArray[float]): Real part of the visibility data.
         imag (NDArray[float]): Imaginary part of the visibility data.
+        pdf_path (str): Path to the folder where the plots will be saved.
 
     Raises:
         ValueError: If the input arrays are empty or have mismatched dimensions.
@@ -713,6 +719,10 @@ def plot_visibilities(u:NDArray[float], v:NDArray[float], uvdist:NDArray[float],
         print(f"Shapes of input arrays:\nu: {u.shape}, v: {v.shape}, uvdist: {uvdist.shape}, amp: {amp.shape}, phase: {phase.shape}, real: {real.shape}, imag: {imag.shape}")
         raise ValueError("Input arrays must have the same shape.")
 
+    if not os.path.exists(pdf_path):
+        os.makedirs(pdf_path)
+
+    print("Plotting visibility data...")
     fig, ax = plt.subplots()
     ax.scatter(u, v, s=1.5, rasterized=True, linewidths=0.0, c="k")
     ax.scatter(
@@ -721,7 +731,8 @@ def plot_visibilities(u:NDArray[float], v:NDArray[float], uvdist:NDArray[float],
     ax.set_xlabel(r"$u$ [k$\lambda$]")
     ax.set_ylabel(r"$v$ [k$\lambda$]")
     ax.set_title("uv-coverage of ALMA simulated data")
-    plt.savefig("uv_coverage.pdf", format='pdf', bbox_inches="tight")
+    plt.savefig(f"{pdf_path}/uv_coverage.pdf", format='pdf', bbox_inches="tight")
+    print(f"uv-coverage plot saved to {pdf_path}/uv_coverage.pdf")
 
     fig, ax = plt.subplots(nrows=4, sharex=True, figsize=(8, 8))
     pkw = {"s":1, "rasterized":True, "linewidths":0.0, "c":"k"}
@@ -734,5 +745,6 @@ def plot_visibilities(u:NDArray[float], v:NDArray[float], uvdist:NDArray[float],
     ax[3].scatter(uvdist, imag, **pkw)
     ax[3].set_ylabel("Im(V) [Jy]")
     ax[3].set_xlabel(r"$uv$dist [k$\lambda$]")
-    plt.savefig("visibility_plots.pdf", format='pdf', bbox_inches="tight")
+    plt.savefig(f"{pdf_path}/visibility_plots.pdf", format='pdf', bbox_inches="tight")
+    print(f"Visibility plots saved to {pdf_path}/visibility_plots.pdf\n")
 ###~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~###
