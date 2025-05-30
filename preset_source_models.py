@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from astropy.io import fits
 from astropy.wcs import WCS
+from astropy.time import Time
 from astropy.coordinates import SkyCoord
 import astropy.units as u
 from typing import Union, List, Tuple
@@ -20,6 +21,8 @@ class ModelSourceMaker:
         - pixel_scale_deg (float): Pixel scale in degrees.
         - shape (tuple): Shape of the image array in pixel units.
         - ra_dec_center: Center coordinates of the image in RA (h.m.s) and DEC (d.m.s) (default: "00h00m00.0s 00d00m00.0s").
+        - freq_Hz (float): Frequency in Hz for the WCS header (default: 33 GHz).
+        - chan_width_Hz (float): Channel width in Hz (default: 50 MHz).
         - xx, yy: Meshgrid arrays for pixel coordinates in the image.
         - rr: Radial distance from the center in arcseconds.
 
@@ -34,19 +37,19 @@ class ModelSourceMaker:
         - spiral_arms(arm_width_arcsec, pitch_angle_deg, number_of_turns=2, intensity=1.0): Generates a spiral arms model.
         - point_sources(source_list): Generates an image with point sources defined by RA/Dec offsets and intensities.
         - plot_image(image, model_name="Model", cmap="hot", save_pdf=True): Plots the image and saves it as a PDF.
-        - save_fits(image, filename, bunit="Jy/pixel", object_name="Model Source"): Saves the image in FITS format.
+        - save_fits(image, filename, freq_Hz, bunit="Jy/pixel", object_name="Model Source"): Saves the image in FITS format.
         - generate_and_save(model_name, image, cmap="hot", bunit="Jy/pixel", save_fits=True, save_pdf=True): Helper function to save the model image and plot it.
 
     Example usage:
-        >>> maker = ModelSourceMaker(fov_arcsec=2, npix=256, ra_dec_center="12h30m00.0s -30d00m00.0s")
+        >>> maker = ModelSourceMaker(fov_arcsec=2, npix=256, ra_dec_center="12h30m00.0s -30d00m00.0s", freq_Hz=9e10, chan_width_Hz=7e7)
         >>> disk_image = maker.flat_disk(radius_arcsec=0.5, intensity=10.0)
         >>> maker.plot_image(disk_image, model_name="Flat Disk Model")
-        >>> maker.save_fits(disk_image, filename="flat_disk_model.fits", object_name="Flat Disk Source")
+        >>> maker.save_fits(disk_image, filename="flat_disk_model.fits", freq_Hz=9e10, object_name="Flat Disk Source")
         >>> maker.generate_and_save("flat_disk", disk_image)
     """
 
     ###~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~###
-    def __init__(self, fov_arcsec:float=1, npix:int=128, ra_dec_center:str="00h00m00.0s 00d00m00.0s"):
+    def __init__(self, fov_arcsec:float=1, npix:int=128, freq_Hz:float=33.0e10, chan_width_Hz:float=5.0e7, ra_dec_center:str="00h00m00.0s 00d00m00.0s"):
         """
         Initializes the ModelSourceMaker with a specified field of view, number of pixels, and center coordinates. This sets up the pixel scale, shape of the image, and creates meshgrid arrays for pixel coordinates.
 
@@ -54,10 +57,13 @@ class ModelSourceMaker:
             fov_arcsec (float): Field of view in arcseconds (default: 1 arcsec).
             npix (int): Number of pixels along one dimension of the image (default: 128).
             ra_dec_center (str or SkyCoord): Center coordinates of the image in RA (h.m.s) and DEC (d.m.s) format or as a SkyCoord object (default: "00h00m00.0s 00d00m00.0s").
+            freq_Hz (float): Frequency in Hz for the WCS header (default: 33 GHz).
+            chan_width_Hz (float): Channel width in Hz (default: 50 MHz).
 
         Raises:
             ValueError: If fov_arcsec or npix are not positive numbers.
             TypeError: If ra_dec_center is not a valid SkyCoord object or string.
+            ValueError: If freq_Hz or chan_width_Hz are not positive numbers.
 
         Returns:
             None
@@ -72,6 +78,10 @@ class ModelSourceMaker:
                 self.ra_dec_center = SkyCoord(ra_dec_center, unit=(u.hourangle, u.deg))
             except Exception as e:
                 raise TypeError(f"Invalid RA/Dec center format: {e}")
+        if not isinstance(freq_Hz, (int, float)) or freq_Hz <= 0:
+            raise ValueError("Frequency must be a positive number in Hz.")
+        if not isinstance(chan_width_Hz, (int, float)) or chan_width_Hz <= 0:
+            raise ValueError("Channel width must be a positive number in Hz.")
 
         self.fov_arcsec = fov_arcsec
         self.npix = npix
@@ -79,6 +89,8 @@ class ModelSourceMaker:
         self.pixel_scale_deg = self.pixel_scale_arcsec / 3600.0
         self.shape = (npix, npix)
         self.ra_dec_center = SkyCoord(ra_dec_center, unit=(u.hourangle, u.deg))
+        self.freq_Hz = freq_Hz
+        self.chan_width_Hz = chan_width_Hz
 
         x = np.arange(npix) - npix // 2
         y = np.arange(npix) - npix // 2
@@ -498,16 +510,20 @@ class ModelSourceMaker:
         if image.shape != self.shape:
             raise ValueError(f"Image shape {image.shape} does not match expected shape {self.shape}.")
 
-        w = WCS(naxis=2)
-        w.wcs.crpix = [self.npix // 2, self.npix // 2]
-        w.wcs.cdelt = np.array([-self.pixel_scale_deg, self.pixel_scale_deg])
-        w.wcs.crval = [self.ra_dec_center.ra.deg, self.ra_dec_center.dec.deg]
-        w.wcs.ctype = ["RA---TAN", "DEC--TAN"]
-        w.wcs.cunit = ["deg", "deg"]
+        w = WCS(naxis=3)
+        w.wcs.crpix = [self.npix // 2, self.npix // 2, 1]
+        w.wcs.cdelt = np.array([-self.pixel_scale_deg, self.pixel_scale_deg, self.chan_width_Hz])
+        w.wcs.crval = [self.ra_dec_center.ra.deg, self.ra_dec_center.dec.deg, self.freq_Hz]
+        w.wcs.ctype = ["RA---TAN", "DEC--TAN", "FREQ"]
+        w.wcs.cunit = ["deg", "deg", "Hz"]
 
-        hdu = fits.PrimaryHDU(data=np.fliplr(image), header=w.to_header())
+        image_to_save = np.fliplr(image)[np.newaxis, :, :]
+
+        hdu = fits.PrimaryHDU(data=image_to_save, header=w.to_header())
         hdu.header['BUNIT'] = bunit
         hdu.header['OBJECT'] = object_name
+        hdu.header['OBSERVER'] = 'model_source_maker'
+        hdu.header['DATE-OBS'] = Time.now().isot
         hdu.writeto(filename, overwrite=True)
 
         print("Source model FITS file saved to:", filename)
