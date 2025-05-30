@@ -17,6 +17,8 @@ preset_model:
   fov_arcsec: 0.1 # Field of view in arcseconds
   npix: 128 # Number of pixels in the model
   ra_dec_center: "23h59m59.96s -34d59m59.50s" # Center coordinates of the model in RA/DEC (hms/dms)
+  freq_Hz: 33.0e9 # Frequency in Hz
+  chan_width_Hz: 5.0e7 # Channel width in Hz
   preset_function_name: "flat_disk" # The preset source model function to use
   model_name: "flat_disk" # Name of the generated model
   radius_arcsec: 0.03 # Radius of the flat disk in arcseconds
@@ -35,9 +37,8 @@ user_model:
 ### ALMA simulation parameters
 ###~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~###
 simalma:
-  project: "flat_disk"
-  overwrite: True
-  skymodel: "flat_disk.fits"
+  project_name: "flat_disk"
+  skymodel: "source_model/flat_disk.fits"
   indirection: "J2000 23h59m59.96s -34d59m59.50s"
   incell: "0.1arcsec"
   inbright: "0.004"
@@ -49,6 +50,7 @@ simalma:
   tpnant: 0
   tptime: "0s"
   pwv: 0.6
+  overwrite: True
   dryrun: False
   image: False
 ###~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~###
@@ -57,7 +59,8 @@ simalma:
 ### Parameters for extracting data from the Measurement Set (MS)
 ###~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~###
 extract_MS_data:
-  npz_file: "flat_disk.npz" # Output file for the extracted data
+  rml_data_path: "data_for_rml"
+  npz_file_name: "flat_disk.npz" # Output file for the extracted data
   make_visibility_plots: True # Whether to create visibility plots
 ###~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~###
 
