@@ -678,7 +678,7 @@ def extract_MS_data(ms_path:str, rml_data_path:str, npz_file_name:str, make_visi
     weight = weight.mean(axis=0)
     sigma = sigma.mean(axis=0)
 
-    print(f"{data.shape} visibilities extracted from the MS")
+    print(f"{data.shape} visibilities extracted from the MS\n")
 
     ms.close()
 
