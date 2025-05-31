@@ -550,6 +550,9 @@ class ModelSourceMaker:
         if save_fits:
             if not os.path.exists("source_model"):
                 os.makedirs("source_model")
-            self.save_fits(image=image, filename=f"source_model/{model_name}.fits", bunit=bunit, object_name=model_name)
+            fits_file_name_to_save = f"source_model/{model_name}.fits"
+            self.save_fits(image=image, filename=fits_file_name_to_save, bunit=bunit, object_name=model_name)
         self.plot_image(image=image, model_name=model_name, cmap=cmap, bunit=bunit, save_pdf=save_pdf)
+
+        return fits_file_name_to_save if save_fits else None
     ###~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~###
